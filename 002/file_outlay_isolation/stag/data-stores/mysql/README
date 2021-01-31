@@ -8,6 +8,7 @@ $ export TF_VAR_db_password=<DB Password>
 $ terraform apply
 
 No matter how you read in the secret, if you pass it as an argument to a Terraform resource, such as aws_db_instance, that secret will be stored in the Terraform state file, in plain text.
+So, ensure the state files are stored encrypted on disk and in transit and the storage is IAM secured. 
 
 Some other supported secret stores
 
