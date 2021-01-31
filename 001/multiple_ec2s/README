@@ -1,0 +1,33 @@
+This is for spinning up 2 EC2 machines and web servers on it within an Auto scaling group and a load balancer in front of it.
+
+Pre-requisites:
+1. Terraform installed
+2. AWS Account created
+3. AWS User created with below policies configured.
+
+AmazonEC2FullAccess
+AmazonS3FullAccess
+AmazonDynamoDBFullAccess
+AmazonRDSFullAccess
+CloudWatchFullAccess
+IAMFullAccess
+
+4. AWS Access Key Id and AWS Secret configured as environment variables
+
+$ export AWS_ACCESS_KEY_ID=AKIA5NZZY4PMU7LFRBP2
+$ export AWS_SECRET_ACCESS_KEY=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
+
+5. Run terraform commands
+
+$ terraform init
+$ terraform plan
+$ terraform apply
+
+Outputs:
+
+aws_dns_name = "terraform-asg-example-2079044295.us-east-2.elb.amazonaws.com"
+
+6. Test
+
+$ curl http://terraform-asg-example-2079044295.us-east-2.elb.amazonaws.com/
+Hello, world multi server!

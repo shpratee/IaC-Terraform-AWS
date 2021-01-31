@@ -1,0 +1,81 @@
+Remote Backup and locking -> AWS S3 and DynamoDB
+
+Partial configuration - pulling all the common configuration out in backend.hcl and keep module specific information in main.tf.
+======================
+
+Like, each module will have different keys to save the backup files, so we will keep the module specific S3 backup key in module specific main.tf
+and backend.hcl will hold the S3 bucket and DynamoDB table nam which will be common to all modules to save the backup files.
+
+You will have to pass the backend config through command line argument
+
+$ terraform init -backend-config=backend.hcl
+
+The other option is Terragrunt
+
+Environment Isolation - Bulkheads built in Terraform design to prevent the disaster to propagate to different environments and areas.
+
+Isolation via Workspaces: Useful for quick, isolated tests on same configuration.
+=========================
+Terraform Workspaces allow you to store the Terraform state in multiple, separate and named workspaces. The default workspace, if you do not
+specify explicitly is "default".
+
+You can create the same infrastructure created in different workspaces using the same files - hence, provides isolation using workspaces
+
+Internally it creates folder named "env:" in the specified S3 bucket under which it created one folder per workspace and terraform keeps the backup/state files per workspace in those folders.
+
+You can modify the behaviour of code by reading the workspace name in script using terraform expression "terraform.workspace".
+
+Commands to deal with workspaces
+To show which workspace are you working in: $ terraform workspace show
+To create a new workspace: $ terraform workspace
+To list created workspaces: $ terraform workspace list
+To select a workspace to work in: $ terraform workspace select <workspace name>
+
+Isolation via file layout: Useful for production use cases for which you need strong separation between environments.
+==========================
+Put terraform configuration files for each environment into a separate folder. E.g. Staging environment in "stage" and Production environment in "prod"
+
+Configure a different backend for each environment using different authentication mechanisms and access control. E.g. each environment could live in a separate AWS account with separate S3
+bucket as backend.
+
+Reduces the screw up in one environment to be spilled in other environment.
+
+If all the components for a single environment were defined in a single Terraform configuration, you could spin up an entire environment with a single "terraform apply". But if all components
+are in separate folders, then you need to run terraform apply separately in each one (note that if you're using Terragrunt, you an automate this process by using the apply-all command).
+
+It makes it more difficult to use resource dependencies. If it was all in one file then app code could have accessed to database attributes using attribute reference.
+But if the app code and database code live in different folders, youj can no longer do that. Terraform offers a solution - "terraform_remote_state" data source.
+
+terraform_remote_state data source: Terraform provides this data source to fetch the Terraform state file stored by another set of Terraform configuration in completely read-only manner.
+==================================
+
+Final Steps:
+============
+
+$ cd 002/file_outlay_isolation/global/s3
+
+// comment terraform block. In first go the state files will be saved locally.
+
+$ terraform init
+$ terraform plan
+$ terraform apply
+
+// uncomment the terraform block now to configure S3 as the backend and DynamoDP for locking faility
+
+$ terraform init
+$ terraform plan
+$ terraform apply
+
+// Initiate MySQL DB now
+
+$ cd ../../stag/data-stores/mysql/
+$ terraform init -backend-config=backend.hcl
+$ terraform plan
+$ terraform apply
+
+// Initialize webserver now
+
+$ cd ../../services/webserver-cluster/
+$ terraform init -backend-config=backend.hcl
+$ terraform plan
+$ terraform apply
