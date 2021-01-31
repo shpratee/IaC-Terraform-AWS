@@ -3,4 +3,4 @@
 .terraform
 *.iml
 .DS_Store
-.terraform.lock.hcl
+*.terraform.lock.hcl
